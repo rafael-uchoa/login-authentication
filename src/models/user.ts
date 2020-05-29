@@ -1,10 +1,9 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { Schema, model } from 'mongoose';
+import bcrypt from 'bcryptjs';
+import IUserDocument from '../interfaces/IUserDocument';
 
-export interface IUser extends Document {
-  name: string;
-  email: string;
-  password: string;
-  createdAt: Date;
+interface IUser extends IUserDocument {
+  method: 'save';
 }
 
 const UserSchema: Schema = new Schema({
@@ -26,4 +25,11 @@ const UserSchema: Schema = new Schema({
   },
 });
 
-export default mongoose.model<IUser>('User', UserSchema);
+UserSchema.pre<IUser>('save', async function (next) {
+  const hash = await bcrypt.hash(this.password, 10);
+  this.password = hash;
+
+  next();
+});
+
+export default model<IUser>('User', UserSchema);
